@@ -1,11 +1,10 @@
 const moongose = require("mongoose");
 
 const uri = process.env.URI;
-const db = process.env.DB
 
 const conectDb = async () => {
   try {
-    await moongose.connect(`${uri}/${db}`, {
+    await moongose.connect(`${uri}`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       writeConcern: {
