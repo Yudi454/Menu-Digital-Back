@@ -7,6 +7,7 @@ const getUsers = async (req, res) => {
   console.log("pase get users");
   try {
     const users = await usuarioModel.find();
+    console.log(users);
     res.status(200).json(users);
   } catch (error) {
     console.log("Error:", error);

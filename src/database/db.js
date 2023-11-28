@@ -8,6 +8,11 @@ const conectDb = async () => {
     await moongose.connect(`${uri}/${db}`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      writeConcern: {
+        w: 'majority',
+        j: true, // Journal acknowledgment
+        wtimeout: 1000,
+      },
     });
     console.log("Database connect");
   } catch (error) {
