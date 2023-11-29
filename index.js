@@ -5,6 +5,9 @@ import morgan from "morgan";
 
 const conectDb = require("./src/database/db");
 
+const firebase = require('firebase/app');
+require('firebase/storage');
+
 console.log("Hola mundo");
 
 const app = express();

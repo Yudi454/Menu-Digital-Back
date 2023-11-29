@@ -1,6 +1,5 @@
 const express = require("express")
 const router = express.Router()
-const upload = require("../libs/storage")
 
 const carruselController = require("../controllers/carruselController")
 
@@ -11,10 +10,10 @@ router.get("/imgBebidas", carruselController.getBebidasImages)
 router.get("/ImgCarrusel/:id", carruselController.getPromotionalImagesById)
 
 //Post
-router.post("/ImgCarrusel",upload.single(`Image`), carruselController.crearImageCarrusel)
+router.post("/ImgCarrusel", carruselController.crearImageCarrusel)
 
 //Put
-router.put("/ImgCarrusel/:id", upload.single("Image"), carruselController.editImage)
+router.put("/ImgCarrusel/:id", carruselController.editImage)
 
 //Delete
 router.delete("/ImgCarrusel/:id", carruselController.deleteImage)

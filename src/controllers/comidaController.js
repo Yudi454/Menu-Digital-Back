@@ -2,6 +2,8 @@ const path = require("path");
 const comidaModal = require("../models/comidaModel")
 const fs = require("fs")
 
+import { uploadFile } from "../libs/uploadFile";
+
 //GET
 const getComida = async (req,res) => {
     console.log("pase por get comida");
@@ -28,28 +30,38 @@ const getComidaById = async (req,res) => {
 const crearComida = async (req,res) => {
     console.log("pase por crear comida");
     try {
-        const {name,Price,Description,Image} = req.body
+        //Caracteristicas del objeto
+        const {name,Price,Description} = req.body
+        const Image = req.file 
+        //Logica por si el objeto esta repetido
         const comidas = await comidaModal.find()
         const comidaRepetida = comidas.find((comida) => comida.name == name )
         if (comidaRepetida) {
-            res.status(200).json({message: "Comida ya creada"})
+            //Si el objeto esta repetido
+           return res.status(200).json({message: "Comida ya creada"})
         } else {
-            const comida = new comidaModal({
-                name,
-                Price,
-                Image,
-                Description
-            })
-            if (req.file) {
-                const { filename } = req.file
-                comida.setImgUrl(filename)  
+            //Logica para saber si estamos recibiendo una imagen
+            console.log(Image);
+            if (Image ) {
+              const {downloadUrl} = await uploadFile(Image) 
+
+              //Si el objeto no existe y contiene una imagen
+              const comida = new comidaModal({
+                  name,
+                  Price,
+                  Image: downloadUrl,
+                  Description
+              })
+              await comida.save()
+             return res.status(200).json({message: "Comida creada con exito", comida})
+              
             }
-            await comida.save()
-            res.status(200).json({message: "Comida creada con exito"})
+            console.log("Debes enviar una imagen");
+            return res.status(400).json({message: "Debes enviar una imagen"})
         }
     } catch (error) {
         console.log(error);
-        res.status(404).json({message: error})
+       return res.status(404).json({message: error})
     }
 }
 

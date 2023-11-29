@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const upload = require("../libs/storage")
+import {upload} from "../libs/multer"
 
 const comidaController = require("../controllers/comidaController")
 
@@ -9,10 +9,10 @@ router.get("/Comida", comidaController.getComida)
 router.get("/Comida/:id", comidaController.getComidaById)
 
 //Post
-router.post("/Comida",upload.single(`Image`), comidaController.crearComida)
+router.post("/Comida",upload.single("Image"), comidaController.crearComida)
 
 //Put
-router.put("/Comida/:id",upload.single(`Image`), comidaController.editarComida)
+router.put("/Comida/:id", comidaController.editarComida)
 
 //Delete
 router.delete("/Comida/:id", comidaController.deleteComida)
