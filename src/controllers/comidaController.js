@@ -2,7 +2,9 @@ const path = require("path");
 const comidaModal = require("../models/comidaModel")
 const fs = require("fs")
 
+import { deleteObject, ref } from "firebase/storage";
 import { uploadFile } from "../libs/uploadFile";
+import { storage } from "../libs/firebase";
 
 //GET
 const getComida = async (req,res) => {
@@ -29,6 +31,7 @@ const getComidaById = async (req,res) => {
 //POST
 const crearComida = async (req,res) => {
     console.log("pase por crear comida");
+    console.log(req.body);
     try {
         //Caracteristicas del objeto
         const {name,Price,Description} = req.body
@@ -41,7 +44,6 @@ const crearComida = async (req,res) => {
            return res.status(200).json({message: "Comida ya creada"})
         } else {
             //Logica para saber si estamos recibiendo una imagen
-            console.log(Image);
             if (Image ) {
               const {downloadUrl} = await uploadFile(Image) 
 
@@ -69,25 +71,30 @@ const crearComida = async (req,res) => {
 
 const editarComida = async (req,res) => {
     console.log("pase por editar comida");
+    console.log(req.body);
     try {
+        //Logica pra encontrar la comida a editar
         const _id = req.params.id
-        const {name,Price,Image,Description} = req.body
+        const {name,Price,Description} = req.body
         const comida = await comidaModal.findById(_id)
+        //Si comida existe realiza esto
         if (comida) {
             comida.name = name || comida.name;
             comida.Price = Price || comida.Price;
-            comida.Image = Image || comida.Image;
             comida.Description = Description || comida.Description;
+            //Si se envia un archivo
             if (req.file) {
                 console.log("image existe");
+                //Logica para encontrar la ruta de la imagen ya existente
                 const imageUrl = comida.Image;
                 const urlParts = imageUrl.split("/");
                 const fileName = urlParts[urlParts.length -1]
-                const rutaArchivo = path.resolve(__dirname, "../../public/Images", fileName)
-                fs.unlinkSync(rutaArchivo)
-
-                const { filename } = req.file
-                comida.setImgUrl(filename)  
+                const fileRef = ref(storage, `file/${fileName}`)
+                //Logica para eliminar la imagen ya existente
+                await deleteObject(fileRef)
+                //Logica agregar la nueva imagen
+                const { downloadUrl } = await uploadFile(req.file)
+                comida.Image = downloadUrl  
             }
             await comida.save();
             res.status(200).json({message: "Comida editada con exito"})
@@ -103,27 +110,26 @@ const editarComida = async (req,res) => {
 const deleteComida  = async(req,res) => {
     console.log("pase por delete comida");
     try {
+        //Logica para encontrar la comida a eliminar
         const id = req.params.id
         const comida = await comidaModal.findOne({_id: id})
 
+        //Si comida existe realiza esta funcion
         if (comida) {
-            const imageUrl = comida.Image;
-            const urlParts = imageUrl.split("/");
-            const fileName = urlParts[urlParts.length -1]
-
-            const rutaArchivo = path.resolve(__dirname, "../../public/Images", fileName)
-
-            fs.unlinkSync(rutaArchivo)
-
-            await comidaModal.findOneAndDelete({_id: id})
-            res.status(200).json({message: "Comida eliminada con exito"})
+            //Logica para eliminar la imagen en Firebase
+            const {Image} = comida
+            const fileRef = ref(storage, Image)
+            await deleteObject(fileRef)
+            //Logica para eliminar la imagen en Mongo
+            await comidaModal.findByIdAndDelete(id)
+            return res.status(200).json({message: "Comida eliminada con exito"})
         } else{
             console.log(error);
-            res.status(404).json({message: "Comida no encontrada"})
+            return  res.status(404).json({message: "Comida no encontrada"})
         }
     } catch (error) {
         console.log(error);
-        res.status(404).json({message: error})
+        return res.status(404).json({message: error})
     }
 }
 

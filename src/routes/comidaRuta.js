@@ -12,7 +12,7 @@ router.get("/Comida/:id", comidaController.getComidaById)
 router.post("/Comida",upload.single("Image"), comidaController.crearComida)
 
 //Put
-router.put("/Comida/:id", comidaController.editarComida)
+router.put("/Comida/:id",upload.single("Image"), comidaController.editarComida)
 
 //Delete
 router.delete("/Comida/:id", comidaController.deleteComida)
