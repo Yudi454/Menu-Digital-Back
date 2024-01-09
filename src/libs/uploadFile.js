@@ -8,7 +8,7 @@ export async function uploadFile (file) {
 
     console.log("pase por uploadFile");
 
-    let fileBuffer = await sharp (file.buffer).resize({width: 200, height: 200, fit: "cover"}).toBuffer()
+    let fileBuffer = await sharp (file.buffer).toBuffer()
 
     const fileRef = ref(storage, `files/${file.originalname} ${Date.now()}`)
 

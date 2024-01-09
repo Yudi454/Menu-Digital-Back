@@ -2,6 +2,10 @@ const bebidaModal = require("../models/bebidaModel")
 const path = require("path");
 const fs = require("fs")
 
+import { deleteObject, ref } from "firebase/storage";
+import { uploadFile } from "../libs/uploadFile";
+import { storage } from "../libs/firebase";
+
 //GET
 const getBebidas = async (req,res) => {
     console.log("pase por traer bebidas");
@@ -28,28 +32,37 @@ const getBebidaById = async (req,res) => {
 const crearBebida = async (req,res) => {
     console.log("pase por crear bebida");
     try {
-        const {name,Price,Image,Description} = req.body
+        //Caracteristicas del objeto
+        const {name,Price,Description} = req.body
+        const Image = req.file
+        //Logica por si el objeto esta repetido
         const bebidas = await bebidaModal.find()
         const bebidaRepetida = bebidas.find((bebida) => bebida.name == name )
         if (bebidaRepetida) {
-            res.status(200).json({message: "Bebida ya creada"})
+            //Si el objeto esta repetido
+           return res.status(200).json({message: "Bebida ya creada"})
         } else {
-            const bebida = new bebidaModal({
-                name,
-                Price,
-                Image,
-                Description
-            });
-            if (req.file) {
-                const { filename } = req.file
-                bebida.setImgUrl(filename)  
-            }
-            await bebida.save();
-            res.status(200).json({message: "Bebida creada con exito"})
+            //Logica para saber si estamos recibiendo una imagen
+            if (Image ) {
+                const {downloadUrl} = await uploadFile(Image) 
+  
+                //Si el objeto no existe y contiene una imagen
+                const bebida = new bebidaModal({
+                    name,
+                    Price,
+                    Image: downloadUrl,
+                    Description
+                })
+                await bebida.save()
+               return res.status(200).json({message: "Bebida creada con exito", bebida})
+                
+              }
+              console.log("Debes enviar una imagen");
+              return res.status(400).json({message: "Debes enviar una imagen"})
         }
     } catch (error) {
         console.log(error);
-        res.status(404).json({message: `${error}`})
+        return res.status(404).json({message: error})
     }
 }
 
@@ -57,25 +70,36 @@ const crearBebida = async (req,res) => {
 const editarBebida = async (req,res) => {
     console.log("pase por editar bebida");
     try {
+        //Logica pra encontrar la comida a editar
         const _id = req.params.id
-        const {name,Price,Image,Description} = req.body
+        const {name,Price,Description} = req.body
         const bebida = await bebidaModal.findById(_id)
+        //Si bebida existe realiza esto
         if (bebida) {
             bebida.name = name || bebida.name;
             bebida.Price = Price || bebida.Price;
-            bebida.Image = Image || bebida.Image;
             bebida.Description = Description || bebida.Description;
+            //Si se envia un archivo
             if (req.file) {
-                const { filename } = req.file
-                bebida.setImgUrl(filename)  
+                console.log("image existe");
+                //Logica para encontrar la ruta de la imagen ya existente
+                const imageUrl = bebida.Image;
+                const urlParts = imageUrl.split("/");
+                const fileName = urlParts[urlParts.length -1]
+                const fileRef = ref(storage, `file/${fileName}`)
+                //Logica para eliminar la imagen ya existente
+                await deleteObject(fileRef)
+                //Logica agregar la nueva imagen
+                const { downloadUrl } = await uploadFile(req.file)
+                bebida.Image = downloadUrl  
             }
             await bebida.save();
             res.status(200).json({message: "Bebida editada con exito"})
         } else {
-            res.status(404).json({message: `${error}`})
+            res.status(404).json({message: error})
         }
     } catch (error) {
-        res.status(404).json({message: `${error}`})
+        res.status(404).json({message: error})
     }
 }
 
@@ -83,26 +107,25 @@ const editarBebida = async (req,res) => {
 const deleteBebida = async (req,res) => {
     console.log("pase por delete bebida");
     try {
+        //Logica para encontrar la comida a eliminar
         const id = req.params.id
         const bebida = await bebidaModal.findOne({_id: id})
 
+        //Si comida existe realiza esta funcion
         if (bebida) {
-            const imageUrl = bebida.Image;
-            const urlParts = imageUrl.split("/");
-            const fileName = urlParts[urlParts.length -1]
-
-            const rutaArchivo = path.resolve(__dirname, "../../public/Images", fileName)
-
-            fs.unlinkSync(rutaArchivo)
-
-            await bebidaModal.findOneAndDelete({_id: id})
-            res.status(200).json({message: "Comida eliminada con exito"})
+             //Logica para eliminar la imagen en Firebase
+             const {Image} = bebida
+             const fileRef = ref(storage, Image)
+             await deleteObject(fileRef)
+             //Logica para eliminar la imagen en Mongo
+             await bebidaModal.findByIdAndDelete(id)
+             return res.status(200).json({message: "Bebida eliminada con exito"})
         } else{
             console.log(error);
-            res.status(404).json({message: "Comida no encontrada"})
+            res.status(404).json({message: "Bebida no encontrada"})
         }
     } catch (error) {
-        res.status(404).json({message: `${error}`})
+        res.status(404).json({message: error})
     }
 }
 

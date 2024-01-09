@@ -86,10 +86,7 @@ const editarComida = async (req,res) => {
             if (req.file) {
                 console.log("image existe");
                 //Logica para encontrar la ruta de la imagen ya existente
-                const imageUrl = comida.Image;
-                const urlParts = imageUrl.split("/");
-                const fileName = urlParts[urlParts.length -1]
-                const fileRef = ref(storage, `file/${fileName}`)
+                const fileRef = ref(storage, comida.Image)
                 //Logica para eliminar la imagen ya existente
                 await deleteObject(fileRef)
                 //Logica agregar la nueva imagen

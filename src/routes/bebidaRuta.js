@@ -1,5 +1,6 @@
 const express = require("express")
 const router = express.Router()
+import {upload} from "../libs/multer"
 
 const bebidaController = require("../controllers/bebidaController")
 
@@ -8,7 +9,7 @@ router.get("/Bebida", bebidaController.getBebidas)
 router.get("/Bebida/:id", bebidaController.getBebidaById)
 
 //Post
-router.post("/Bebida", bebidaController.crearBebida)
+router.post("/Bebida",upload.single("Image"), bebidaController.crearBebida)
 
 //Put
 router.put("/Bebida/:id", bebidaController.editarBebida)
