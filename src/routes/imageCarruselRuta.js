@@ -14,7 +14,7 @@ router.get("/ImgCarrusel/:id", carruselController.getPromotionalImagesById)
 router.post("/ImgCarrusel",upload.single("Image"), carruselController.crearImageCarrusel)
 
 //Put
-router.put("/ImgCarrusel/:id", carruselController.editImage)
+router.put("/ImgCarrusel/:id",upload.single("Image"), carruselController.editImage)
 
 //Delete
 router.delete("/ImgCarrusel/:id", carruselController.deleteImage)

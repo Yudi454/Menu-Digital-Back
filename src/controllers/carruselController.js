@@ -60,7 +60,7 @@ const crearImageCarrusel = async (req, res) => {
     const { Position, Function } = req.body;
     const Image = req.file;
     const images = await carruselModal.find();
-    const imageRepeat = images.find((image) => image.Position == position);
+    const imageRepeat = images.find((image) => image.Position == Position);
 
     if (imageRepeat) {
       //Si el objeto esta repetido
@@ -86,7 +86,7 @@ const crearImageCarrusel = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    return res.status(404).json({message: error})
+    return res.status(404).json({ message: error });
   }
 };
 
@@ -94,27 +94,24 @@ const crearImageCarrusel = async (req, res) => {
 const editImage = async (req, res) => {
   console.log("pase por editar imagen");
   try {
-    const id = req.params.id;
-    const { Image, Position, Function } = req.body;
-    const image = await carruselModal.findById(id);
+    const _id = req.params.id;
+    const { Position, Function } = req.body;
+    console.log("ID", _id);
+    const image = await carruselModal.findById(_id);
     if (image) {
-      image.Image = Image || image.Image;
       image.Position = Position || image.Position;
       image.Function = Function || image.Function;
       if (req.file) {
-        const imageUrl = image.Image;
-        const urlParts = imageUrl.split("/");
-        const fileName = urlParts[urlParts.length - 1];
-        const rutaArchivo = path.resolve(
-          __dirname,
-          "../../public/Images",
-          fileName
-        );
-        fs.unlinkSync(rutaArchivo);
-
-        const { filename } = req.file;
-        image.setImgUrl(filename);
+        console.log("image existe");
+        //Logica para encontrar la ruta de la imagen ya existente
+        const fileRef = ref(storage, image.Image);
+        //Logica para eliminar la imagen ya existente
+        await deleteObject(fileRef);
+        //Logica agregar la nueva imagen
+        const { downloadUrl } = await uploadFile(req.file);
+        image.Image = downloadUrl;
       }
+      console.log(image);
       await image.save();
       res.status(200).json({ message: "Comida editada con exito" });
     } else {
