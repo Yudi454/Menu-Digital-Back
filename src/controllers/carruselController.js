@@ -130,20 +130,13 @@ const deleteImage = async (req, res) => {
     const imagen = await carruselModal.findOne({ _id: id });
 
     if (imagen) {
-      const imageUrl = imagen.Image;
-      const urlParts = imageUrl.split("/");
-      const fileName = urlParts[urlParts.length - 1];
-
-      const rutaArchivo = path.resolve(
-        __dirname,
-        "../../public/Images",
-        fileName
-      );
-
-      fs.unlinkSync(rutaArchivo);
-
-      await carruselModal.findOneAndDelete({ _id: id });
-      res.status(200).json({ message: "Imagen eliminada con exito" });
+      //Logica para eliminar la imagen en Firebase
+      const {Image} = imagen
+      const fileRef = ref(storage, Image)
+      await deleteObject(fileRef)
+      //Logica para eliminar la imagen en Mongo
+      await carruselModal.findByIdAndDelete(id)
+      return res.status(200).json({message: "Imagen eliminada con exito"})
     } else {
       console.log(error);
       res.status(404).json({ message: "Imagen no encontrada" });
