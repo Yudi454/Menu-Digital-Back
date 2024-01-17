@@ -1,5 +1,6 @@
 const express = require("express")
 const router = express.Router()
+import {upload} from "../libs/multer"
 
 const carruselController = require("../controllers/carruselController")
 
@@ -10,7 +11,7 @@ router.get("/imgBebidas", carruselController.getBebidasImages)
 router.get("/ImgCarrusel/:id", carruselController.getPromotionalImagesById)
 
 //Post
-router.post("/ImgCarrusel", carruselController.crearImageCarrusel)
+router.post("/ImgCarrusel",upload.single("Image"), carruselController.crearImageCarrusel)
 
 //Put
 router.put("/ImgCarrusel/:id", carruselController.editImage)
