@@ -60,7 +60,7 @@ const crearImageCarrusel = async (req, res) => {
     const { Position, Function } = req.body;
     const Image = req.file;
     const images = await carruselModal.find();
-    const imageRepeat = images.find((image) => image.Position == Position);
+    const imageRepeat = images.find((image) => image.Position == Position && image.Function == Function);
 
     if (imageRepeat) {
       //Si el objeto esta repetido
