@@ -65,8 +65,18 @@ const login = async (req, res) => {
         .json({ message: "Usuarios y/o contraseña incorrectos" });
     }
 
-    res.header("auth-token").json({
-      message: "Usuario logueado con exito",
+    
+    //Creacion del Token
+    const token = jwt.sign(
+      {
+        id: user._id
+      },
+      process.env.SECRET_KEY,
+      { expiresIn: "1D" }
+    );
+    res.header("auth-token", token).json({
+      message: "Usuario logueado con éxito",
+      data: { token },
     });
   } catch (error) {
     console.log(error);
